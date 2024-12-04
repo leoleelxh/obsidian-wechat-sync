@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-wechat-sync",
+  "name": "WeChat Sync",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Format Obsidian markdown for WeChat Official Account and other platforms",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
