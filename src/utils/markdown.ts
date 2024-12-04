@@ -9,17 +9,22 @@ export interface MarkdownConverterOptions {
 
 export class MarkdownConverter {
     private options: MarkdownConverterOptions;
+    private renderer: marked.Renderer;
 
     constructor(options: MarkdownConverterOptions) {
         this.options = options;
+        this.renderer = new marked.Renderer();
         this.setupMarked();
     }
 
-    private setupMarked() {
-        const renderer = new marked.Renderer();
+    /**
+     * 设置marked渲染器的配置
+     */
+    private setupMarked(): void {
+        const renderer = this.renderer;
 
         // 自定义标题渲染
-        renderer.heading = (text, level) => {
+        renderer.heading = (text: string, level: number): string => {
             const id = text.toLowerCase().replace(/[^\w]+/g, '-');
             if (level === 1) {
                 return `<h1 data-tool="mdnice编辑器" style="margin-top: 30px; margin-bottom: 15px; padding: 0px; font-weight: bold; color: black; font-size: 25px;"><span class="prefix" style="display: none;"></span><span class="content" style="display: inline-block; font-weight: bold; color: #595959;">${text}</span><span class="suffix"></span></h1>`;
@@ -32,7 +37,7 @@ export class MarkdownConverter {
         };
 
         // 自定义代码块渲染
-        renderer.code = (code, language) => {
+        renderer.code = (code: string, language: string | undefined): string => {
             const highlightedCode = language && hljs.getLanguage(language)
                 ? hljs.highlight(code, { language }).value
                 : code;
@@ -44,17 +49,17 @@ export class MarkdownConverter {
         };
 
         // 自定义段落渲染
-        renderer.paragraph = (text) => {
+        renderer.paragraph = (text: string): string => {
             return `<p data-tool="mdnice编辑器" style="padding-top: 8px; padding-bottom: 8px; line-height: 26px; color: #595959; margin: 10px 0px; letter-spacing: 2px; font-size: 14px; word-spacing: 2px;">${text}</p>`;
         };
 
         // 自定义引用渲染
-        renderer.blockquote = (quote) => {
+        renderer.blockquote = (quote: string): string => {
             return `<blockquote data-tool="mdnice编辑器" style="display: block; font-size: 0.9em; overflow: auto; overflow-scrolling: touch; padding-top: 10px; padding-bottom: 10px; padding-left: 20px; padding-right: 10px; margin-bottom: 20px; margin-top: 20px; text-size-adjust: 100%; line-height: 1.55em; font-weight: 400; border-radius: 6px; color: #595959; font-style: normal; text-align: left; box-sizing: inherit; border-left: none; border: 1px solid #DEC6FB; background: #F6EEFF;"><span style="color: #DEC6FB; font-size: 34px; line-height: 1; font-weight: 700;">❝</span>${quote}<span style="float: right; color: #DEC6FB;">❞</span></blockquote>`;
         };
 
         // 自定义图片渲染
-        renderer.image = (href, title, text) => {
+        renderer.image = (href: string, title: string | null, text: string): string => {
             return `<figure data-tool="mdnice编辑器" style="margin: 0; margin-top: 10px; margin-bottom: 10px;">
                 <img src="${href}" alt="${text || ''}" style="display: block; margin: 0 auto; max-width: 100%; border-radius: 6px;">
                 ${title ? `<figcaption style="margin-top: 5px; text-align: center; color: #888; font-size: 14px;">${title}</figcaption>` : ''}
@@ -62,28 +67,29 @@ export class MarkdownConverter {
         };
 
         // 自定义强调渲染
-        renderer.strong = (text) => {
+        renderer.strong = (text: string): string => {
             return `<strong style="color: #595959; font-weight: bold;"><span>「</span>${text}<span>」</span></strong>`;
         };
 
         // 自定义斜体渲染
-        renderer.em = (text) => {
+        renderer.em = (text: string): string => {
             return `<em style="font-style: normal; color: #595959; background: #F6EEFF;">${text}</em>`;
         };
 
         // 自定义删除线渲染
-        renderer.del = (text) => {
+        renderer.del = (text: string): string => {
             return `<s>${text}</s>`;
         };
 
         // 自定义行内代码渲染
-        renderer.codespan = (code) => {
+        renderer.codespan = (code: string): string => {
             return `<code style="font-size: 14px; word-wrap: break-word; padding: 2px 4px; border-radius: 4px; margin: 0 2px; background-color: rgba(27,31,35,.05); font-family: Operator Mono, Consolas, Monaco, Menlo, monospace; word-break: break-all; color: #595959;">${code}</code>`;
         };
 
+        // 配置marked选项
         marked.setOptions({
-            renderer: renderer,
-            highlight: (code, lang) => {
+            renderer: this.renderer,
+            highlight: (code: string, lang: string): string => {
                 if (lang && hljs.getLanguage(lang)) {
                     try {
                         return hljs.highlight(code, { language: lang }).value;
@@ -102,6 +108,11 @@ export class MarkdownConverter {
         });
     }
 
+    /**
+     * 将Markdown文本转换为HTML
+     * @param markdown Markdown文本
+     * @returns 转换后的HTML
+     */
     public convert(markdown: string): string {
         // 转换Markdown为HTML
         const html = marked(markdown);
