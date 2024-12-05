@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { App, TFile, MarkdownView } from 'obsidian';
-import { MarkdownConverter } from '../utils/markdown';
+import { App, Notice } from 'obsidian';
 import { WeChatSyncSettings } from '../settings';
+import { MarkdownConverter } from '../utils/markdown';
+import { ClipboardHelper } from '../utils/clipboard';
 
 interface WeChatSyncProps {
     app: App;
@@ -10,149 +10,57 @@ interface WeChatSyncProps {
 }
 
 export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }) => {
-    const [activeTab, setActiveTab] = useState(settings.defaultPlatform);
-    const [previewMode, setPreviewMode] = useState('desktop');
-    const [markdown, setMarkdown] = useState('');
-    const [html, setHtml] = useState('');
+    const [content, setContent] = React.useState<string>('');
 
-    useEffect(() => {
-        // 获取当前活动文件的内容
-        const loadContent = async () => {
-            const activeView = app.workspace.getActiveViewOfType(MarkdownView);
-            if (activeView) {
-                const content = await app.vault.read(activeView.file);
-                setMarkdown(content);
+    React.useEffect(() => {
+        // 监听活动文件的变化
+        const handleFileChange = async () => {
+            const activeFile = app.workspace.getActiveFile();
+            if (activeFile) {
+                const content = await app.vault.read(activeFile);
+                const converter = new MarkdownConverter({ platform: settings.defaultPlatform });
+                const html = converter.convert(content);
+                setContent(html);
             }
         };
 
-        loadContent();
+        // 初始加载
+        handleFileChange();
 
-        // 监听编辑器变化
-        const editorHandler = app.workspace.on('editor-change', async () => {
-            const activeView = app.workspace.getActiveViewOfType(MarkdownView);
-            if (activeView) {
-                const content = await app.vault.read(activeView.file);
-                setMarkdown(content);
-            }
-        });
-
-        // 监听文件打开
-        const fileOpenHandler = app.workspace.on('file-open', async (file: TFile) => {
-            if (file) {
-                const content = await app.vault.read(file);
-                setMarkdown(content);
-            }
-        });
-
-        return () => {
-            app.workspace.offref(editorHandler);
-            app.workspace.offref(fileOpenHandler);
-        };
-    }, [app.workspace]);
-
-    useEffect(() => {
-        updatePreview();
-    }, [markdown, activeTab, settings]);
-
-    const updatePreview = () => {
-        const converter = new MarkdownConverter({
-            theme: settings.theme,
-            codeTheme: settings.codeTheme,
-            platform: activeTab as 'wechat' | 'zhihu' | 'juejin'
-        });
+        // 添加文件变化监听器
+        const fileChangeHandler = app.workspace.on('file-open', handleFileChange);
         
-        const convertedHtml = converter.convert(markdown);
-        setHtml(convertedHtml);
-    };
+        return () => {
+            // 清理监听器
+            app.workspace.offref(fileChangeHandler);
+        };
+    }, [app.workspace, settings.defaultPlatform]);
 
-    const copyToClipboard = async () => {
+    const handleCopy = async () => {
         try {
-            // 直接复制HTML内容
-            await navigator.clipboard.writeText(html);
+            // 优化HTML以适应微信公众号
+            const optimizedHtml = ClipboardHelper.optimizeForWeChat(content);
             
-            // 添加复制成功的视觉反馈
-            const copyButton = document.querySelector('.copy-button');
-            if (copyButton instanceof HTMLElement) {
-                const originalText = copyButton.textContent;
-                copyButton.textContent = '复制成功！';
-                setTimeout(() => {
-                    if (copyButton) {
-                        copyButton.textContent = originalText;
-                    }
-                }, 2000);
-            }
-        } catch (err) {
-            console.error('Failed to copy:', err);
-            // 添加复制失败的视觉反馈
-            const copyButton = document.querySelector('.copy-button');
-            if (copyButton instanceof HTMLElement) {
-                const originalText = copyButton.textContent;
-                copyButton.textContent = '复制失败';
-                setTimeout(() => {
-                    if (copyButton) {
-                        copyButton.textContent = originalText;
-                    }
-                }, 2000);
-            }
+            // 复制到剪贴板
+            await ClipboardHelper.copyToClipboard(optimizedHtml);
+            
+            // 显示成功提示
+            new Notice('内容已复制到剪贴板！');
+        } catch (error) {
+            console.error('复制失败:', error);
+            new Notice('复制失败，请重试！');
         }
-    };
-
-    const exportToPDF = async () => {
-        // TODO: 实现PDF导出功能
     };
 
     return (
         <div className="wechat-sync-container">
-            <div className="wechat-sync-header">
-                <div className="platform-tabs">
-                    <button 
-                        className={`tab ${activeTab === 'wechat' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('wechat')}
-                    >
-                        微信公众号
-                    </button>
-                    <button 
-                        className={`tab ${activeTab === 'zhihu' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('zhihu')}
-                    >
-                        知乎
-                    </button>
-                    <button 
-                        className={`tab ${activeTab === 'juejin' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('juejin')}
-                    >
-                        掘金
-                    </button>
-                </div>
-                <div className="preview-mode-toggle">
-                    <button 
-                        className={`mode ${previewMode === 'desktop' ? 'active' : ''}`}
-                        onClick={() => setPreviewMode('desktop')}
-                    >
-                        桌面预览
-                    </button>
-                    <button 
-                        className={`mode ${previewMode === 'mobile' ? 'active' : ''}`}
-                        onClick={() => setPreviewMode('mobile')}
-                    >
-                        手机预览
-                    </button>
-                </div>
+            <div className="wechat-sync-toolbar">
+                <button onClick={handleCopy}>复制到剪贴板</button>
             </div>
-            <div className={`preview-container ${previewMode}`}>
-                <div 
-                    className="content-preview"
-                    dangerouslySetInnerHTML={{ __html: html }}
-                />
-            </div>
-            <div className="action-buttons">
-                <button className="copy-button" onClick={copyToClipboard}>
-                    复制内容
-                </button>
-                <button className="export-pdf" onClick={exportToPDF}>
-                    导出 PDF
-                </button>
-            </div>
+            <div 
+                className="wechat-sync-preview"
+                dangerouslySetInnerHTML={{ __html: content }}
+            />
         </div>
     );
 };
