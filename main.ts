@@ -1,24 +1,25 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
-import { createRoot } from 'react-dom/client';
 import { WeChatSyncView, VIEW_TYPE_WECHAT } from './src/view';
-import { WeChatSyncSettings, DEFAULT_SETTINGS, WeChatSyncSettingTab } from './src/settings';
+import { WeChatSyncSettings, DEFAULT_SETTINGS } from './src/settings';
 
 export default class WeChatSyncPlugin extends Plugin {
     settings: WeChatSyncSettings;
+    view: WeChatSyncView | null = null;
 
     async onload() {
         await this.loadSettings();
 
         this.registerView(
             VIEW_TYPE_WECHAT,
-            (leaf) => new WeChatSyncView(leaf, this.settings)
+            (leaf) => {
+                this.view = new WeChatSyncView(leaf, this);
+                return this.view;
+            }
         );
 
-        this.addRibbonIcon('share', 'WeChat Sync', () => {
+        this.addRibbonIcon('share', '微信同步', () => {
             this.activateView();
         });
-
-        this.addSettingTab(new WeChatSyncSettingTab(this.app, this));
     }
 
     async onunload() {
@@ -31,6 +32,17 @@ export default class WeChatSyncPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+        if (this.view) {
+            this.view.refresh();
+        }
+    }
+
+    async updateSettings(newSettings: Partial<WeChatSyncSettings>) {
+        this.settings = {
+            ...this.settings,
+            ...newSettings
+        };
+        await this.saveSettings();
     }
 
     async activateView() {
@@ -40,10 +52,8 @@ export default class WeChatSyncPlugin extends Plugin {
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_WECHAT);
 
         if (leaves.length > 0) {
-            // View already exists
             leaf = leaves[0];
         } else {
-            // Create new leaf
             leaf = workspace.getRightLeaf(false);
             await leaf.setViewState({
                 type: VIEW_TYPE_WECHAT,
@@ -51,7 +61,6 @@ export default class WeChatSyncPlugin extends Plugin {
             });
         }
 
-        // Reveal the leaf
         if (leaf) {
             workspace.revealLeaf(leaf);
         }
