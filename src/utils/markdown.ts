@@ -7,6 +7,8 @@ export interface MarkdownConverterOptions {
     theme: keyof typeof themes;
     codeTheme: keyof typeof codeThemes;
     platform: 'wechat' | 'zhihu' | 'juejin';
+    fontSize?: number;
+    lineHeight?: number;
 }
 
 export class MarkdownConverter {
@@ -52,10 +54,11 @@ export class MarkdownConverter {
         const renderer = new marked.Renderer();
         const theme = themes[this.options.theme];
         const codeTheme = codeThemes[this.options.codeTheme];
+        const { fontSize, lineHeight } = this.options;
 
         // 自定义段落渲染
         renderer.paragraph = (text: string): string => {
-            return `<p style="${theme.paragraph}">${text}</p>`;
+            return `<p style="${theme.paragraph(fontSize, lineHeight)}">${text}</p>`;
         };
 
         // 自定义标题渲染
@@ -172,11 +175,12 @@ export class MarkdownConverter {
      */
     public convert(markdown: string): string {
         const theme = themes[this.options.theme];
+        const { fontSize, lineHeight } = this.options;
         const html = marked(markdown);
         
         return `
             <section id="nice" data-tool="mdnice编辑器" data-website="https://aizhuanqian.com" style="font-size: 16px; padding: 0 10px; word-spacing: 0px; word-break: break-word; word-wrap: break-word; text-align: left; line-height: 1.75; color: #595959; font-family: Optima-Regular, Optima, PingFangTC-Light, PingFangSC-light, PingFangTC-light; letter-spacing: 2px; background-image: linear-gradient(90deg, rgba(50, 0, 0, 0.05) 3%, rgba(0, 0, 0, 0) 3%), linear-gradient(360deg, rgba(50, 0, 0, 0.05) 3%, rgba(0, 0, 0, 0) 3%); background-size: 20px 20px; background-position: center center;">
-                <div style="${theme.container}">
+                <div style="${theme.container(fontSize, lineHeight)}">
                     ${html}
                 </div>
             </section>

@@ -26,18 +26,22 @@ export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }
             platform: settings.platform,
             theme: currentSettings.theme,
             codeTheme: currentSettings.codeTheme,
+            fontSize: currentSettings.fontSize,
+            lineHeight: currentSettings.lineHeight
         });
         
         const baseHtml = converter.convert(markdownContent);
         const styleOverrides = `
             <style>
                 .wechat-preview {
-                    font-size: ${currentSettings.fontSize}px;
-                    line-height: ${currentSettings.lineHeight};
+                    font-size: ${currentSettings.fontSize}px !important;
+                    line-height: ${currentSettings.lineHeight} !important;
                 }
                 ${currentSettings.customCSS}
             </style>
         `;
+        console.log('Current Settings:', currentSettings);
+        console.log('Generated HTML:', styleOverrides + baseHtml);
         setContent(styleOverrides + baseHtml);
     }, [markdownContent, currentSettings, settings.platform]);
 
@@ -76,13 +80,15 @@ export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }
     // 当 Markdown 内容或设置改变时更新预览
     React.useEffect(() => {
         updatePreview();
-    }, [markdownContent, currentSettings, updatePreview]);
+    }, [markdownContent, currentSettings, updatePreview, settings.platform]);
 
     const handleStyleChange = (changes: StyleConfigChanges) => {
-        setCurrentSettings(prev => ({
-            ...prev,
-            ...changes
-        }));
+        console.log('Style changes:', changes);
+        setCurrentSettings(prev => {
+            const updatedSettings = { ...prev, ...changes };
+            console.log('Updated Settings:', updatedSettings);
+            return updatedSettings;
+        });
     };
 
     const handleCopy = async () => {

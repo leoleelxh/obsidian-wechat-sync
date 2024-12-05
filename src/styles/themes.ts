@@ -1,9 +1,9 @@
 export interface Theme {
-    container: string;
+    container: (fontSize?: number, lineHeight?: number) => string;
     heading1: string;
     heading2: string;
     heading3: string;
-    paragraph: string;
+    paragraph: (fontSize?: number, lineHeight?: number) => string;
     blockquote: string;
     link: string;
     image: string;
@@ -13,10 +13,10 @@ export interface Theme {
 
 export const themes: Record<string, Theme> = {
     default: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.6) => `
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #24292e;
             max-width: 100%;
             margin: 0 auto;
@@ -42,10 +42,11 @@ export const themes: Record<string, Theme> = {
             color: #24292e;
             font-weight: 600;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.6) => `
             margin: 1em 0;
             color: #24292e;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
         `,
         blockquote: `
             margin: 1em 0;
@@ -73,10 +74,10 @@ export const themes: Record<string, Theme> = {
     },
 
     elegant: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.8) => `
             font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-            font-size: 16px;
-            line-height: 1.8;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #2c3e50;
             max-width: 100%;
             margin: 0 auto;
@@ -103,10 +104,11 @@ export const themes: Record<string, Theme> = {
             color: #2c3e50;
             font-weight: 600;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.8) => `
             margin: 1.2em 0;
             color: #2c3e50;
-            line-height: 1.8;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             text-align: justify;
         `,
         blockquote: `
@@ -140,10 +142,10 @@ export const themes: Record<string, Theme> = {
     },
 
     minimal: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.6) => `
             font-family: -apple-system, system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial;
-            font-size: 16px;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #333;
             max-width: 100%;
             margin: 0 auto;
@@ -167,10 +169,11 @@ export const themes: Record<string, Theme> = {
             color: #333;
             font-weight: 500;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.6) => `
             margin: 1em 0;
             color: #333;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
         `,
         blockquote: `
             margin: 1em 0;
@@ -198,10 +201,10 @@ export const themes: Record<string, Theme> = {
     },
 
     dark: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.6) => `
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #c9d1d9;
             background-color: #0d1117;
             max-width: 100%;
@@ -228,10 +231,11 @@ export const themes: Record<string, Theme> = {
             color: #c9d1d9;
             font-weight: 600;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.6) => `
             margin: 1em 0;
             color: #c9d1d9;
-            line-height: 1.6;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
         `,
         blockquote: `
             margin: 1em 0;
@@ -260,10 +264,10 @@ export const themes: Record<string, Theme> = {
     },
 
     zhihu: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.7) => `
             font-family: -apple-system, "Helvetica Neue", "Helvetica", "Arial", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
-            font-size: 16px;
-            line-height: 1.7;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #1a1a1a;
             max-width: 100%;
             margin: 0 auto;
@@ -290,10 +294,11 @@ export const themes: Record<string, Theme> = {
             font-weight: 600;
             line-height: 1.4;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.7) => `
             margin: 1.2em 0;
             color: #1a1a1a;
-            line-height: 1.7;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
         `,
         blockquote: `
             margin: 1em 0;
@@ -322,10 +327,10 @@ export const themes: Record<string, Theme> = {
     },
 
     juejin: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.75) => `
             font-family: -apple-system, system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial;
-            font-size: 16px;
-            line-height: 1.75;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #252933;
             max-width: 100%;
             margin: 0 auto;
@@ -352,10 +357,11 @@ export const themes: Record<string, Theme> = {
             font-weight: 600;
             line-height: 1.4;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.75) => `
             margin: 1.2em 0;
             color: #252933;
-            line-height: 1.75;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
         `,
         blockquote: `
             margin: 1em 0;
@@ -385,10 +391,10 @@ export const themes: Record<string, Theme> = {
     },
 
     chinese: {
-        container: `
+        container: (fontSize = 16, lineHeight = 2) => `
             font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Helvetica Neue", Arial, sans-serif;
-            font-size: 16px;
-            line-height: 2;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #333;
             max-width: 100%;
             margin: 0 auto;
@@ -413,10 +419,11 @@ export const themes: Record<string, Theme> = {
             color: #333;
             font-weight: 700;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 2) => `
             margin: 1.2em 0;
             color: #333;
-            line-height: 2;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             text-align: justify;
         `,
         blockquote: `
@@ -448,10 +455,10 @@ export const themes: Record<string, Theme> = {
     },
 
     wechatPro: {
-        container: `
+        container: (fontSize = 16, lineHeight = 1.8) => `
             font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.8;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             color: #3f3f3f;
             max-width: 100%;
             margin: 0 auto;
@@ -480,10 +487,11 @@ export const themes: Record<string, Theme> = {
             color: #1a1a1a;
             font-weight: bold;
         `,
-        paragraph: `
+        paragraph: (fontSize = 16, lineHeight = 1.8) => `
             margin: 1.5em 0;
             color: #3f3f3f;
-            line-height: 1.8;
+            font-size: ${fontSize}px;
+            line-height: ${lineHeight};
             letter-spacing: 0.05em;
             text-align: justify;
         `,
