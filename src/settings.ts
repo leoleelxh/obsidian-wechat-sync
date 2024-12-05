@@ -1,16 +1,18 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
-import WeChatSyncPlugin from '../main';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import type WeChatSyncPlugin from './main';
 
 export interface WeChatSyncSettings {
-    theme: string;
-    codeTheme: string;
-    defaultPlatform: 'wechat' | 'zhihu' | 'juejin';
+    selectedTheme: string;
+    selectedCodeTheme: string;
+    platform: 'wechat' | 'zhihu' | 'juejin';
+    customCSS: string;
 }
 
 export const DEFAULT_SETTINGS: WeChatSyncSettings = {
-    theme: 'default',
-    codeTheme: 'github',
-    defaultPlatform: 'wechat'
+    selectedTheme: 'wechatPro',
+    selectedCodeTheme: 'atom-one-dark',
+    platform: 'wechat',
+    customCSS: ''
 };
 
 export class WeChatSyncSettingTab extends PluginSettingTab {
@@ -25,43 +27,70 @@ export class WeChatSyncSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
+        containerEl.createEl('h2', { text: 'WeChat Sync Settings' });
+
+        // Theme Setting
         new Setting(containerEl)
-            .setName('主题')
-            .setDesc('选择文章的主题样式')
+            .setName('Theme')
+            .setDesc('Choose the theme for your content')
             .addDropdown(dropdown => dropdown
-                .addOption('default', '默认主题')
-                .addOption('elegant', '优雅主题')
-                .addOption('simple', '简约主题')
-                .setValue(this.plugin.settings.theme)
+                .addOption('default', 'Default')
+                .addOption('elegant', 'Elegant')
+                .addOption('minimal', 'Minimal')
+                .addOption('dark', 'Dark')
+                .addOption('zhihu', 'Zhihu')
+                .addOption('juejin', 'Juejin')
+                .addOption('chinese', 'Chinese')
+                .addOption('wechatPro', 'WeChat Pro')
+                .setValue(this.plugin.settings.selectedTheme)
                 .onChange(async (value) => {
-                    this.plugin.settings.theme = value;
+                    this.plugin.settings.selectedTheme = value;
                     await this.plugin.saveSettings();
+                    this.plugin.refreshPreview();
                 }));
 
+        // Code Theme Setting
         new Setting(containerEl)
-            .setName('代码主题')
-            .setDesc('选择代码块的主题样式')
+            .setName('Code Theme')
+            .setDesc('Choose the theme for code blocks')
             .addDropdown(dropdown => dropdown
                 .addOption('github', 'GitHub')
                 .addOption('monokai', 'Monokai')
                 .addOption('dracula', 'Dracula')
-                .setValue(this.plugin.settings.codeTheme)
+                .addOption('vs2015', 'VS2015')
+                .addOption('atom-one-dark', 'Atom One Dark')
+                .setValue(this.plugin.settings.selectedCodeTheme)
                 .onChange(async (value) => {
-                    this.plugin.settings.codeTheme = value;
+                    this.plugin.settings.selectedCodeTheme = value;
                     await this.plugin.saveSettings();
+                    this.plugin.refreshPreview();
                 }));
 
+        // Platform Setting
         new Setting(containerEl)
-            .setName('默认平台')
-            .setDesc('选择默认的发布平台')
+            .setName('Platform')
+            .setDesc('Choose the target platform')
             .addDropdown(dropdown => dropdown
-                .addOption('wechat', '微信公众号')
-                .addOption('zhihu', '知乎')
-                .addOption('juejin', '掘金')
-                .setValue(this.plugin.settings.defaultPlatform)
-                .onChange(async (value: any) => {
-                    this.plugin.settings.defaultPlatform = value;
+                .addOption('wechat', 'WeChat')
+                .addOption('zhihu', 'Zhihu')
+                .addOption('juejin', 'Juejin')
+                .setValue(this.plugin.settings.platform)
+                .onChange(async (value: 'wechat' | 'zhihu' | 'juejin') => {
+                    this.plugin.settings.platform = value;
                     await this.plugin.saveSettings();
+                    this.plugin.refreshPreview();
+                }));
+
+        // Custom CSS Setting
+        new Setting(containerEl)
+            .setName('Custom CSS')
+            .setDesc('Add custom CSS styles')
+            .addTextArea(text => text
+                .setValue(this.plugin.settings.customCSS)
+                .onChange(async (value) => {
+                    this.plugin.settings.customCSS = value;
+                    await this.plugin.saveSettings();
+                    this.plugin.refreshPreview();
                 }));
     }
 }

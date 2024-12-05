@@ -31,10 +31,10 @@
 
 ## 🔧 配置选项
 
-- 主题选择：支持多种预设主题
-- 代码高亮样式：多种代码配色方案
-- 图片处理：可配置图片上传方式
-- 自定义 CSS：支持自定义样式
+- 主题选择：8 种预设主题（default、elegant、minimal、dark、zhihu、juejin、chinese、wechatPro）
+- 代码高亮：5 种代码主题（github、monokai、dracula、vs2015、atom-one-dark）
+- 平台适配：支持微信公众号、知乎、掘金
+- 自定义 CSS：支持自定义样式注入
 
 ## 📝 实现思路
 
@@ -44,96 +44,75 @@
 obsidian-wechat-sync/
 ├── src/
 │   ├── main.ts              # 插件主入口
-│   ├── view.tsx             # 视图组件
 │   ├── settings.ts          # 设置管理
-│   ├── components/          # React 组件
-│   │   └── WeChatSync.tsx   # 主界面组件
-│   └── utils/              # 工具类
-│       ├── markdown.ts     # Markdown 转换
-│       └── clipboard.ts    # 剪贴板处理
+│   ├── styles/             # 样式系统
+│   │   ├── themes.ts      # 主题定义
+│   │   └── codeThemes.ts  # 代码主题
+│   └── utils/             # 工具类
+│       ├── markdown.ts    # Markdown 转换
+│       └── clipboard.ts   # 剪贴板处理
 ```
 
 ### 关键实现方法
 
 1. **Markdown 转换流程**
-   - 使用 `marked` 库解析 Markdown
+   - 使用 TypeScript 实现类型安全的转换器
    - 自定义渲染器处理各类节点
-   - 添加微信公众号特定样式
-   - 优化图片和代码块显示
+   - 动态主题和代码高亮应用
+   - 平台特定优化
 
 2. **富文本复制实现**
-   - 使用 `ClipboardHelper` 处理复制
-   - 保持样式和格式信息
-   - 优化 HTML 结构
-   - 处理特殊字符和编码
+   - 类型安全的剪贴板工具类
+   - HTML 结构优化
+   - 样式保持和兼容性处理
+   - 错误处理和用户反馈
 
-3. **实时预览功能**
-   - 监听文件变化
-   - 实时转换更新
-   - React 状态管理
-   - 性能优化
+3. **主题系统**
+   - 8 种预设内容主题
+   - 5 种代码高亮主题
+   - 类型安全的主题定义
+   - 自定义 CSS 注入支持
 
-4. **样式处理策略**
-   - 内联样式优先
-   - 适配微信编辑器
-   - 主题系统支持
-   - 响应式设计
+4. **设置管理**
+   - 类型安全的设置接口
+   - 主题和代码主题选择
+   - 平台选择
+   - 自定义样式配置
 
-### 技术要点
+### 技术实现
 
-1. **Markdown 解析优化**
+1. **插件主体**
    ```typescript
-   class MarkdownConverter {
-       private renderer: marked.Renderer;
-       
-       constructor() {
-           this.renderer = new marked.Renderer();
-           this.setupMarked();
-       }
-       
-       private setupMarked() {
-           // 自定义渲染规则
-           this.renderer.heading = (text, level) => {
-               // 处理标题
-           };
-           
-           this.renderer.code = (code, language) => {
-               // 处理代码块
-           };
-           
-           // 更多渲染器配置...
+   export default class WeChatSyncPlugin extends Plugin {
+       settings: WeChatSyncSettings;
+       private markdownConverter: MarkdownConverter;
+
+       async onload() {
+           // 加载设置
+           // 初始化转换器
+           // 注册命令
+           // 添加设置界面
        }
    }
    ```
 
-2. **剪贴板处理**
+2. **设置管理**
    ```typescript
-   class ClipboardHelper {
-       public static async copyToClipboard(html: string) {
-           // 处理富文本复制
-       }
-       
-       public static optimizeForWeChat(html: string) {
-           // 优化 HTML 结构
-       }
+   export interface WeChatSyncSettings {
+       selectedTheme: string;
+       selectedCodeTheme: string;
+       platform: 'wechat' | 'zhihu' | 'juejin';
+       customCSS: string;
    }
    ```
 
-3. **React 组件设计**
+3. **主题系统**
    ```typescript
-   const WeChatSyncComponent: React.FC = () => {
-       // 状态管理
-       const [content, setContent] = useState('');
-       
-       // 文件监听
-       useEffect(() => {
-           // 监听文件变化
-       }, []);
-       
-       // 渲染逻辑
-       return (
-           // UI 组件
-       );
+   interface Theme {
+       name: string;
+       styles: {
+           [key: string]: string;
+       };
    }
    ```
 

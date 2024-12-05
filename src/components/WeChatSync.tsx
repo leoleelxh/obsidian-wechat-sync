@@ -18,7 +18,11 @@ export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }
             const activeFile = app.workspace.getActiveFile();
             if (activeFile) {
                 const content = await app.vault.read(activeFile);
-                const converter = new MarkdownConverter({ platform: settings.defaultPlatform });
+                const converter = new MarkdownConverter({
+                    platform: settings.platform,
+                    theme: settings.selectedTheme,
+                    codeTheme: settings.selectedCodeTheme
+                });
                 const html = converter.convert(content);
                 setContent(html);
             }
@@ -34,7 +38,7 @@ export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }
             // 清理监听器
             app.workspace.offref(fileChangeHandler);
         };
-    }, [app.workspace, settings.defaultPlatform]);
+    }, [app.workspace, settings]);
 
     const handleCopy = async () => {
         try {
