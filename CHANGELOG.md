@@ -2,6 +2,19 @@
 
 All notable changes to the Obsidian WeChat Sync Plugin will be documented in this file.
 
+## [0.2.1] - 2024-01-16
+
+### Fixed
+- 修复字号和行距设置不生效的问题
+  - 更新了 MarkdownConverter 以正确处理字号和行距参数
+  - 改进了主题系统中的样式应用逻辑
+  - 优化了动态样式更新机制
+
+### Enhanced
+- 改进了样式系统的类型安全性
+- 优化了实时预览的性能
+- 提升了样式设置的响应速度
+
 ## [0.2.0] - 2024-01-15
 
 ### Added
