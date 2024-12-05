@@ -1,7 +1,9 @@
 import * as React from 'react';
-import { App, Notice } from 'obsidian';
+import { App, Notice, MarkdownView } from 'obsidian';
 import { WeChatSyncSettings } from '../settings';
 import { MarkdownConverter } from '../utils/markdown';
+import { ClipboardHelper } from '../utils/clipboard';
+import { StyleConfig, StyleConfigChanges } from './StyleConfig';
 
 interface WeChatSyncProps {
     app: App;
@@ -10,65 +12,116 @@ interface WeChatSyncProps {
 
 export const WeChatSyncComponent: React.FC<WeChatSyncProps> = ({ app, settings }) => {
     const [content, setContent] = React.useState<string>('');
-    const [activeFile, setActiveFile] = React.useState(app.workspace.getActiveFile());
+    const [currentSettings, setCurrentSettings] = React.useState({
+        theme: settings.selectedTheme,
+        codeTheme: settings.selectedCodeTheme,
+        fontSize: settings.fontSize || 16,
+        lineHeight: settings.lineHeight || 1.6,
+        customCSS: settings.customCSS || '',
+    });
+    const [markdownContent, setMarkdownContent] = React.useState<string>('');
 
-    // 监听文件变化
+    const updatePreview = React.useCallback(() => {
+        const converter = new MarkdownConverter({
+            platform: settings.platform,
+            theme: currentSettings.theme,
+            codeTheme: currentSettings.codeTheme,
+        });
+        
+        const baseHtml = converter.convert(markdownContent);
+        const styleOverrides = `
+            <style>
+                .wechat-preview {
+                    font-size: ${currentSettings.fontSize}px;
+                    line-height: ${currentSettings.lineHeight};
+                }
+                ${currentSettings.customCSS}
+            </style>
+        `;
+        setContent(styleOverrides + baseHtml);
+    }, [markdownContent, currentSettings, settings.platform]);
+
     React.useEffect(() => {
-        const handleFileOpen = async (file: any) => {
-            setActiveFile(file);
-        };
-
-        const handleFileModify = async (file: any) => {
-            if (file === activeFile) {
-                await updateContent(file);
+        // 监听活动文件的变化
+        const handleFileChange = async () => {
+            const activeFile = app.workspace.getActiveFile();
+            if (activeFile) {
+                const content = await app.vault.read(activeFile);
+                setMarkdownContent(content);
             }
         };
-
-        // 注册事件监听器
-        const fileOpenRef = app.workspace.on('file-open', handleFileOpen);
-        const fileModifyRef = app.vault.on('modify', handleFileModify);
 
         // 初始加载
-        if (activeFile) {
-            updateContent(activeFile);
-        }
+        handleFileChange();
 
-        return () => {
-            // 清理事件监听器
-            app.workspace.offref(fileOpenRef);
-            app.vault.offref(fileModifyRef);
-        };
-    }, [app.workspace, app.vault, activeFile, settings]);
-
-    // 更新内容的函数
-    const updateContent = async (file: any) => {
-        if (file) {
-            try {
-                const markdown = await app.vault.read(file);
-                const converter = new MarkdownConverter({
-                    platform: settings.platform,
-                    theme: settings.selectedTheme,
-                    codeTheme: settings.selectedCodeTheme,
-                    fontSize: settings.fontSize,
-                    lineHeight: settings.lineHeight,
-                    textColor: settings.textColor,
-                    linkColor: settings.linkColor
-                });
-                const html = converter.convert(markdown);
-                setContent(html);
-            } catch (error) {
-                console.error('Error updating content:', error);
-                new Notice('更新内容时出错');
+        // 添加文件变化监听器
+        const fileChangeHandler = app.workspace.on('file-open', handleFileChange);
+        
+        // 添加编辑监听器
+        const editorChangeHandler = app.workspace.on('editor-change', async () => {
+            const activeView = app.workspace.getActiveViewOfType(MarkdownView);
+            if (activeView) {
+                const content = activeView.editor.getValue();
+                setMarkdownContent(content);
             }
+        });
+        
+        return () => {
+            // 清理监听器
+            app.workspace.offref(fileChangeHandler);
+            app.workspace.offref(editorChangeHandler);
+        };
+    }, [app.workspace]);
+
+    // 当 Markdown 内容或设置改变时更新预览
+    React.useEffect(() => {
+        updatePreview();
+    }, [markdownContent, currentSettings, updatePreview]);
+
+    const handleStyleChange = (changes: StyleConfigChanges) => {
+        setCurrentSettings(prev => ({
+            ...prev,
+            ...changes
+        }));
+    };
+
+    const handleCopy = async () => {
+        try {
+            // 优化HTML以适应微信公众号
+            const optimizedHtml = ClipboardHelper.optimizeForWeChat(content);
+            
+            // 复制到剪贴板
+            await ClipboardHelper.copyToClipboard(optimizedHtml);
+            
+            // 显示成功提示
+            new Notice('已复制到剪贴板');
+        } catch (error) {
+            console.error('复制失败:', error);
+            new Notice('复制失败');
         }
     };
 
     return (
-        <div className="wechat-sync-preview">
-            <div 
-                className="preview-content"
-                dangerouslySetInnerHTML={{ __html: content }}
-            />
+        <div className="wechat-sync-container">
+            <div className="wechat-sync-toolbar">
+                <button onClick={handleCopy}>复制为富文本</button>
+            </div>
+            
+            <div className="wechat-sync-content">
+                <div className="wechat-sync-preview">
+                    <div 
+                        className="wechat-preview"
+                        dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                </div>
+                
+                <div className="wechat-sync-config">
+                    <StyleConfig
+                        {...currentSettings}
+                        onChange={handleStyleChange}
+                    />
+                </div>
+            </div>
         </div>
     );
 };
